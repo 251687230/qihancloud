@@ -1,0 +1,133 @@
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+
+
+def baseUrl = 'https://github.com/AlexSmille'
+def siteUrl = baseUrl
+def gitUrl = "${baseUrl}/Android-Gradle-Demo"
+def issueUrl = "${baseUrl}/issues"
+
+install {
+    repositories {
+        mavenInstaller {
+            // This generates POM.xml with proper paramters
+            pom.project {
+
+                //添加项目描述
+                name 'ASM Plugin For Navigation'
+
+                //设置开源证书信息
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                //添加开发者信息
+                developers {
+                    developer {
+                        name 'lujie'
+                    }
+                }
+
+            }
+        }
+
+    }
+}
+
+
+//配置上传Bintray相关信息
+bintray {
+    user = "251687230"
+    key = "851a6554791a299823f61c7fee39abb5e2958200"
+
+    configurations = ['archives']
+    pkg {
+        repo = 'qihancloud' // 上传到中央仓库的名称
+        name = 'custom_asm' // 上传到jcenter 的项目名称
+        desc = "A customized ASM library for navigation's connection" // 项目描述
+        websiteUrl = siteUrl
+        issueTrackerUrl = issueUrl
+        vcsUrl = gitUrl
+        labels = ['gradle', 'plugin']
+        licenses = ['Apache-2.0']
+        publish = true
+    }
+}
+
+buildscript {
+
+    // 添加远程仓库
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+    // 添加依赖，此依赖从远程仓库中查找
+    dependencies {
+
+        // classpath 'com.alex_mahao.gradle.plugin:gradleplugin:2.0.0'
+        // 将项目发布到JCenter 所需要的jar   添加依赖
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
+        classpath 'com.github.dcendents:android-maven-plugin:1.2'
+    }
+}
+repositories {
+    mavenCentral()
+    jcenter()
+}
+dependencies {
+    compile fileTree(dir: 'libs', includes: ['*.jar'])
+    compile gradleApi()
+    compile localGroovy()
+    compile "com.android.tools.build:gradle:1.5.0"
+}
+
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task groovyjavadoc(type: Javadoc) {
+    source = sourceSets.main.java.srcDirs
+}
+
+task javadocJar(type: Jar, dependsOn: groovyjavadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+//添加UTF-8编码否则注释可能JAVADOC文档可能生成不了
+groovyjavadoc {
+    options{
+        encoding "UTF-8"
+        charSet 'UTF-8'
+        author true
+        version true
+        links "http://docs.oracle.com/javase/7/docs/api"
+        title "swipeJavaDoc"
+    }
+}
+
+
+group = 'com.qihancloud.asmplugin'  // 组名
+version = '1.0.0' // 版本
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('../repo'))
+            pom.groupId='com.qihancloud.asmplugin'
+            pom.artifactId = 'asmplugin' // 插件名
+            pom.version='1.0.0'
+        }
+    }
+}
